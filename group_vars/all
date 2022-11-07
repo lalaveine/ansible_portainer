@@ -1,0 +1,7 @@
+host_port: 9000
+
+admin_user: admin
+admin_password: P@ssword1234
+
+remove_existing_container: true
+remove_persistent_data: false

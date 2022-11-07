@@ -1,0 +1,8 @@
+---
+- name: Deploy portainer
+  hosts: all
+  # remote_user: user
+  # become: yes
+  # become_method: sudo
+  roles:
+  - portainer

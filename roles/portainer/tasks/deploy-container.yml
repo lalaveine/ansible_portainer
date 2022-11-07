@@ -1,0 +1,46 @@
+---
+- name: Create portainer data volume
+  community.docker.docker_volume:
+    name: portainer-data
+
+- name: Deploy portainer container
+  community.docker.docker_container:
+    name: "portainer"
+    image: "portainer/portainer-ce:latest"
+    state: "started"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer-data:/data
+    published_ports:
+      - "{{ host_port }}:9000"
+    security_opts:
+      - no-new-privileges:true
+  register: portainer_docker
+
+- name: Fact portainer running
+  ansible.builtin.set_fact:
+    portainer_is_running: "{{ portainer_docker.container.State.Running }}"
+
+- name: Fact portainer endpoint
+  ansible.builtin.set_fact:
+    portainer_endpoint: "http://{{ portainer_docker.container.NetworkSettings.IPAddress }}:{{ host_port }}/api"
+
+- name: "Check!!!"
+  ansible.builtin.debug:
+    msg: "{{ portainer_is_running }} // {{ portainer_endpoint }}"
+
+- name: Check container status
+  ansible.builtin.fail:
+    msg: "Portainer did not start: {{ portainer_is_running }}"
+  when: not portainer_is_running
+
+- name: Wait for Portainer web interface to get available
+  ansible.builtin.uri:
+    url: "http://{{ portainer_docker.container.NetworkSettings.IPAddress }}:{{ host_port }}"
+    method: GET
+  register: wait_portainer_result
+  until: wait_portainer_result is succeeded
+  retries: 10
+  delay: 3
+  changed_when: false
