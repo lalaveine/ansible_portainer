@@ -6,4 +6,4 @@
 
 - name: Create admin account
   ansible.builtin.include_tasks: create-account.yml
-  when: admin_user and admin_password is defined
+  when: admin_user and admin_password is defined and remove_persistent_data
